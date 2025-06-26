@@ -3,13 +3,12 @@ from dotenv import load_dotenv
 import os, uuid, pathlib, textwrap, json
 from groq import Groq
 from pdfminer.high_level import extract_text
+from io import BytesIO
 
 router = APIRouter()
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
-PDF_TMP = pathlib.Path("uploads")
 
 @router.post("/upgrade/resume_pdf")
 async def upgrade_resume_pdf(
@@ -19,11 +18,14 @@ async def upgrade_resume_pdf(
 ):
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File must be a PDF")
-    file_id = uuid.uuid4().hex
-    pdf_path = PDF_TMP / f"{file_id}_raw.pdf"
-    with open(pdf_path, "wb") as buffer:
-        buffer.write(await file.read())
-    text = extract_text(pdf_path)
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    # Use BytesIO to process PDF in memory
+    try:
+        text = extract_text(BytesIO(file_bytes))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not extract text from PDF: {e}")
     if not text.strip():
         raise HTTPException(status_code=400, detail="PDF file is empty or not readable.")
 
