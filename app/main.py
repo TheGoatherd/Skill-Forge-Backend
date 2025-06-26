@@ -3,11 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel, SecuritySchemeType
 from fastapi.security import HTTPBearer
 from fastapi.openapi.utils import get_openapi
-from mangum import Mangum
+
 from app.routes import auth, dashboard,carrer,resume_pdf # adjust based on your project structure
 
 app = FastAPI(title="Career Portal API")
-handler = Mangum(app)
+
 
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(carrer.router,prefix="/carrer",tags=["carrer"])
